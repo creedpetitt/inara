@@ -26,6 +26,6 @@ class PgConnection {
 
     bool is_open() const;
     ConnStatusType getStatus() const;
-    PgResult query(const std::string &sql);
+    asio::awaitable<PgResult> async_query(const std::string &sql);
     asio::awaitable<void> async_connect();
 };
