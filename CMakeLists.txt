@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(inara)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 20)
 
 include(FetchContent)
@@ -14,7 +15,7 @@ FetchContent_MakeAvailable(asio)
 find_package(Threads REQUIRED)
 find_package(PostgreSQL REQUIRED)
 
-add_executable(inara main.cpp)
+add_executable(inara main.cpp src/postgres/PgConnection.cpp src/postgres/PgResult.cpp)
 
 target_compile_definitions(inara PUBLIC ASIO_STANDALONE)
 
