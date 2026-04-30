@@ -16,9 +16,9 @@ class PgConnection {
     std::unique_ptr<asio::posix::stream_descriptor> socket_;
     ConnStatusType getStatus() const;
     asio::awaitable<void> flush_outgoing();
-    asio::awaitable<PgResult> async_read();
-    asio::awaitable<void> wait_read();
-    asio::awaitable<void> wait_write();
+    asio::awaitable<PgResult> read_results();
+    asio::awaitable<void> wait_readable();
+    asio::awaitable<void> wait_writeable();
 
   public:
     PgConnection(asio::io_context &ctx, const std::string &conn_string);
@@ -29,6 +29,6 @@ class PgConnection {
     ~PgConnection();
 
     bool is_open() const;
-    asio::awaitable<PgResult> async_query(const std::string &sql);
-    asio::awaitable<void> async_connect();
+    asio::awaitable<PgResult> query(const std::string &sql);
+    asio::awaitable<void> connect();
 };

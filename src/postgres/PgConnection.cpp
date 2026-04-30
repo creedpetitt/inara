@@ -65,16 +65,16 @@ ConnStatusType PgConnection::getStatus() const {
     return PQstatus(conn_);
 }
 
-asio::awaitable<PgResult> PgConnection::async_query(const std::string &sql) {
+asio::awaitable<PgResult> PgConnection::query(const std::string &sql) {
     if (PQsendQuery(conn_, sql.c_str()) == 0) {
         throw std::runtime_error(PQerrorMessage(conn_));
     }
 
     co_await flush_outgoing();
-    co_return co_await async_read();
+    co_return co_await read_results();
 }
 
-asio::awaitable<void> PgConnection::async_connect() {
+asio::awaitable<void> PgConnection::connect() {
     while (true) {
         PostgresPollingStatusType status = PQconnectPoll(conn_);
         if (status == PGRES_POLLING_OK) {
@@ -90,11 +90,11 @@ asio::awaitable<void> PgConnection::async_connect() {
         }
 
         if (status == PGRES_POLLING_READING) {
-            co_await wait_read();
+            co_await wait_readable();
         }
 
         if (status == PGRES_POLLING_WRITING) {
-            co_await wait_write();
+            co_await wait_writeable();
         }
     }
 }
@@ -110,18 +110,18 @@ asio::awaitable<void> PgConnection::flush_outgoing() {
             throw std::runtime_error(PQerrorMessage(conn_));
         }
 
-        co_await wait_write();
+        co_await wait_writeable();
         if (PQconsumeInput(conn_) == 0) {
             throw std::runtime_error(PQerrorMessage(conn_));
         }
     }
 }
 
-asio::awaitable<PgResult> PgConnection::async_read() {
+asio::awaitable<PgResult> PgConnection::read_results() {
     std::optional<PgResult> latest_result;
     bool query_failed = false;
     while (true) {
-        co_await wait_read();
+        co_await wait_readable();
         // fill buffer with network data from socket
         if (PQconsumeInput(conn_) == 0) {
             throw std::runtime_error(PQerrorMessage(conn_));
@@ -153,12 +153,12 @@ asio::awaitable<PgResult> PgConnection::async_read() {
     }
 }
 
-asio::awaitable<void> PgConnection::wait_read() {
+asio::awaitable<void> PgConnection::wait_readable() {
     co_await socket_->async_wait(asio::posix::descriptor_base::wait_read,
                                  asio::use_awaitable);
 }
 
-asio::awaitable<void> PgConnection::wait_write() {
+asio::awaitable<void> PgConnection::wait_writeable() {
     co_await socket_->async_wait(asio::posix::descriptor_base::wait_write,
                                  asio::use_awaitable);
 }
