@@ -1,8 +1,5 @@
 #include "PgConnection.h"
 #include "PgResult.h"
-#include "asio/posix/descriptor_base.hpp"
-#include "asio/use_awaitable.hpp"
-
 #include <libpq-fe.h>
 
 #include <memory>
@@ -142,7 +139,7 @@ asio::awaitable<PgResult> PgConnection::async_read() {
                     throw std::runtime_error(
                         "Query complete but didn't return PGresult");
                 }
-                
+
                 co_return std::move(latest_result.value());
             }
 
