@@ -14,4 +14,7 @@ class PgResult {
     PgResult(PgResult &&other) noexcept;
     PgResult &operator=(PgResult &&other) noexcept;
     ~PgResult();
+
+    ExecStatusType getResponseStatus() const;
+    static bool is_success(ExecStatusType status);
 };

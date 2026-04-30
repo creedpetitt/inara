@@ -1,6 +1,7 @@
 #include "PgResult.h"
 
 #include <libpq-fe.h>
+#include <stdexcept>
 
 PgResult::PgResult(PGresult *res) { res_ = res; }
 
@@ -24,4 +25,16 @@ PgResult::~PgResult() {
     if (res_ != nullptr) {
         PQclear(res_);
     }
+}
+
+ExecStatusType PgResult::getResponseStatus() const {
+    if (res_ == nullptr) {
+        throw std::runtime_error("PgResult is null");
+    }
+
+    return PQresultStatus(res_);
+}
+
+bool PgResult::is_success(ExecStatusType status) {
+    return status == PGRES_TUPLES_OK || status == PGRES_COMMAND_OK;
 }
