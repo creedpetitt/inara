@@ -1,5 +1,6 @@
 #include "PgConnection.h"
 #include "PgResult.h"
+
 #include <libpq-fe.h>
 
 #include <memory>
@@ -8,6 +9,7 @@
 #include <utility>
 
 #include <asio.hpp>
+#include <asio/experimental/parallel_group.hpp>
 
 PgConnection::PgConnection(asio::io_context &ctx,
                            const std::string &conn_string) {
@@ -110,9 +112,10 @@ asio::awaitable<void> PgConnection::flush_outgoing() {
             throw std::runtime_error(PQerrorMessage(conn_));
         }
 
-        co_await wait_writeable();
-        if (PQconsumeInput(conn_) == 0) {
-            throw std::runtime_error(PQerrorMessage(conn_));
+        if (co_await wait_read_or_write() == true) {
+            if (PQconsumeInput(conn_) == 0) {
+                throw std::runtime_error(PQerrorMessage(conn_));
+            }
         }
     }
 }
@@ -161,4 +164,26 @@ asio::awaitable<void> PgConnection::wait_readable() {
 asio::awaitable<void> PgConnection::wait_writeable() {
     co_await socket_->async_wait(asio::posix::descriptor_base::wait_write,
                                  asio::use_awaitable);
+}
+
+asio::awaitable<bool> PgConnection::wait_read_or_write() {
+    auto [completion_order, read_err, write_err] =
+        co_await asio::experimental::make_parallel_group(
+            socket_->async_wait(asio::posix::descriptor_base::wait_read,
+                                asio::deferred),
+            socket_->async_wait(asio::posix::descriptor_base::wait_write,
+                                asio::deferred))
+            .async_wait(asio::experimental::wait_for_one(),
+                        asio::use_awaitable);
+    if (completion_order[0] == 0) {
+        if (read_err) {
+            throw std::runtime_error(read_err.message());
+        }
+        co_return true;
+    }
+
+    if (write_err) {
+        throw std::runtime_error(write_err.message());
+    }
+    co_return false;
 }
