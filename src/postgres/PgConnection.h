@@ -10,6 +10,8 @@
 #include <asio.hpp>
 #include <asio/experimental/parallel_group.hpp>
 
+namespace orbwvr::postgres::detail {
+
 class PgConnection {
 
   private:
@@ -62,3 +64,4 @@ class PgConnection {
 
     asio::awaitable<void> connect();
 };
+} // namespace orbwvr::postgres::detail

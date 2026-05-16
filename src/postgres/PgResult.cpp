@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <string_view>
 
+namespace orbwvr::postgres::detail {
+
 PgResult::PgResult(PGresult *res) { res_ = res; }
 
 PgResult::PgResult(PgResult &&other) noexcept {
@@ -56,7 +58,7 @@ bool PgResult::is_null(int row, int col) const {
 std::string_view PgResult::value(int row, int col) const {
     ensure_result();
     check_bounds(row, col);
-    const char * value = PQgetvalue(res_, row, col);  
+    const char *value = PQgetvalue(res_, row, col);
     int len = length(row, col);
     return std::string_view(value, static_cast<size_t>(len));
 }
@@ -93,3 +95,4 @@ void PgResult::check_bounds(int row, int col) const {
         throw std::out_of_range("Column index out of range");
     }
 }
+} // namespace orbwvr::postgres::detail

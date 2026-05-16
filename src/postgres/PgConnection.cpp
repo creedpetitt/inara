@@ -11,9 +11,11 @@
 #include <asio.hpp>
 #include <asio/experimental/parallel_group.hpp>
 
+namespace orbwvr::postgres::detail {
+
 // Forward declaration
-static std::vector<const char *> str_to_char_pointer(
-    const std::vector<std::string> &string_vector);
+static std::vector<const char *>
+str_to_char_pointer(const std::vector<std::string> &string_vector);
 
 PgConnection::PgConnection(asio::io_context &ctx,
                            const std::string &conn_string) {
@@ -90,7 +92,7 @@ asio::awaitable<PgResult>
 PgConnection::query_params(const std::string &sql,
                            const std::vector<std::string> &params,
                            const std::vector<Oid> &param_types) {
-                            
+
     std::vector<const char *> param_values = str_to_char_pointer(params);
     if (PQsendQueryParams(conn_, sql.c_str(), static_cast<int>(params.size()),
                           param_types.empty() ? nullptr : param_types.data(),
@@ -129,10 +131,10 @@ PgConnection::query_prepared(const std::string &statement_name,
 
     std::vector<const char *> param_values = str_to_char_pointer(params);
 
-    if (PQsendQueryPrepared(conn_, statement_name.c_str(), static_cast<int>(params.size()),
-                            param_values.empty() ? nullptr
-                                                 : param_values.data(),
-                            nullptr, nullptr, 0) == 0) {
+    if (PQsendQueryPrepared(
+            conn_, statement_name.c_str(), static_cast<int>(params.size()),
+            param_values.empty() ? nullptr : param_values.data(), nullptr,
+            nullptr, 0) == 0) {
         throw std::runtime_error(PQerrorMessage(conn_));
     }
 
@@ -254,8 +256,8 @@ asio::awaitable<bool> PgConnection::wait_read_or_write() {
     co_return false;
 }
 
-static std::vector<const char *> str_to_char_pointer(
-    const std::vector<std::string> &string_vector) {
+static std::vector<const char *>
+str_to_char_pointer(const std::vector<std::string> &string_vector) {
     std::vector<const char *> char_pointer_vector;
     char_pointer_vector.reserve(string_vector.size());
 
@@ -264,3 +266,4 @@ static std::vector<const char *> str_to_char_pointer(
     }
     return char_pointer_vector;
 }
+} // namespace orbwvr::postgres::detail
