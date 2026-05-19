@@ -24,7 +24,7 @@ The recommended way to integrate Orbwvr into a project is via CMake `FetchConten
 include(FetchContent)
 FetchContent_Declare(
     orbwvr
-    GIT_REPOSITORY <URL_TO_YOUR_REPOSITORY>
+    GIT_REPOSITORY https://github.com/creedpetitt/orbwvr
     GIT_TAG main
 )
 FetchContent_MakeAvailable(orbwvr)
