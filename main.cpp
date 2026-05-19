@@ -1,29 +1,31 @@
-#include <iostream>
-#include <asio.hpp>
+  #include "orbwvr/database.h"
 
-using asio::awaitable;
-using asio::use_awaitable;
-using asio::co_spawn;
-using asio::detached;
-
-awaitable<void> run_client_session(asio::io_context& ctx) {
-
-    std::cout << "Running client session" << std::endl;
-    co_return;
-}
-
-int main()
-{
-    try {
-        asio::io_context io_context;
-        asio::signal_set signals(io_context, SIGINT, SIGINT);
-        signals.async_wait([&](auto, auto)
-        {
-            io_context.stop();
-        });
-        co_spawn(io_context, run_client_session(io_context), detached);
-        io_context.run();
-    } catch (std::exception& e) {
-        std::cerr << e.what() << std::endl;
-    }
-}
+  #include <exception>
+  #include <iostream>
+  #include <vector>
+  
+  orbwvr::async<void> run_database_test() {
+      try {
+          orbwvr::database db(
+              "postgresql://postgres:DBNAME@localhost:PORT/postgres");
+          std::vector<std::string> params{"1"};
+          co_await db.query("SELECT 1");
+          std::cout << "SUCCESSFULLY QUERIED DB" << std::endl;
+          co_await db.query_params("SELECT $1::int", params);
+          std::cout << "SUCCESSFULLY QUERIED DB WITH PARAMS" << std::endl;
+          co_await db.prepare("s1", "SELECT $1::int");
+          std::cout << "SUCCESSFULLY PREPARED STATEMENT" << std::endl;
+          co_await db.query_prepared("s1", params);
+          std::cout << "SUCCESSFULLY QUERIED PREPARED STATEMENT" << std::endl;
+      } catch (const std::exception &e) {
+          std::cerr << e.what() << std::endl;
+      }
+      co_return;
+  }
+  int main() {
+      try {
+          orbwvr::sync_wait(run_database_test());
+      } catch (const std::exception &e) {
+          std::cerr << e.what() << std::endl;
+      }
+  }
