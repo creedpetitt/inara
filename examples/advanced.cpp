@@ -1,4 +1,4 @@
-#include "orbwvr/database.h"
+#include "orbwvr.h"
 
 #include <exception>
 #include <iostream>
@@ -8,7 +8,7 @@ orbwvr::async<void> run_database_test() {
     try {
         orbwvr::database db(
             "postgresql://postgres:DB_NAME@localhost:PORT/postgres");
-
+            
         // 1. DDL using basic query()
         std::cout << "Creating table..." << std::endl;
         co_await db.query("DROP TABLE IF EXISTS test_users");

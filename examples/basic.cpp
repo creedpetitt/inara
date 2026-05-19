@@ -1,4 +1,4 @@
-#include "orbwvr/database.h"
+#include "orbwvr.h"
 
 #include <exception>
 #include <iostream>
